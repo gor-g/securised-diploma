@@ -16,7 +16,7 @@ def write_text(img: Image, text: str, pos: tuple[int, int]):
     """Write text on an image"""
     
     draw = ImageDraw.Draw(img)
-    font = ImageFont.load_default(size=160)
+    font = ImageFont.truetype("./data/Marianne-Bold.otf", 20)
     draw.text(pos, text, (0, 0, 0), font)
 
     return img

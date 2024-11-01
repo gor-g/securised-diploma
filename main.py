@@ -75,7 +75,12 @@ def create_diploma(path_image: str, student: str, average: str, merit: str):
     """Create a diploma with visible and hidden informations"""
     
     img = Image.open(path_image)
-    pass
+    
+    img = write_text(img, "Diplôme national de master en informatique".upper(), (210, 200))
+    img = write_text(img, f"Obtenu par : {student}", (345, 300))
+    img = write_text(img, f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}", (160, 400))
+
+    return img
 
 
 def main():
@@ -83,8 +88,9 @@ def main():
     signature, key = sign_file("./data/diplome-BG.png")
     h_img = hash_image("./data/diplome-BG.png")
     check_signature(key.public_key(), h_img, signature)
-    img = write_text(Image.open("./data/diplome_ecrit.png"), "Ouistitos", (1, 1))
-    img.save("./data/diplome_ecrit.png")
+    path = "./data/diplome_ecrit.png"
+    img = create_diploma("./data/diplome-BG.png", "Truc BIDULE", "14.65", "bien")
+    img.save(path)
     # generate_keys()
 
 main()
