@@ -71,23 +71,33 @@ def check_signature(public_key, h_img, signature):
         print("Signature invalide !")
 
 
-def create_diploma(path_image: str, student: str, average: str, merit: str):
+def create_diploma(template_path: str, student: str, average: str, merit: str):
     """Create a diploma with visible and hidden informations"""
     
-    img = Image.open(path_image)
+    img = Image.open(template_path)
     
+    # VISIBLE
     img = write_text(img, "Diplôme national de master en informatique".upper(), (210, 200))
     img = write_text(img, f"Obtenu par : {student}", (345, 300))
     img = write_text(img, f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}", (160, 400))
+
+    student_name = student.replace(" ", "_")
+    new_path = f"./data/diplome-{student_name}.png"
+    img.save(new_path)
+
+    # HIDDEN
+    generate_keys(passphrase=student_name)
+    signature, key = sign_file(new_path, passphrase=student_name)
+    img = write_text(img, signature, (0, 500))
 
     return img
 
 
 def main():
     # hide_message()
-    signature, key = sign_file("./data/diplome-BG.png")
-    h_img = hash_image("./data/diplome-BG.png")
-    check_signature(key.public_key(), h_img, signature)
+    # signature, key = sign_file("./data/diplome-BG.png")
+    # h_img = hash_image("./data/diplome-BG.png")
+    # check_signature(key.public_key(), h_img, signature)
     path = "./data/diplome_ecrit.png"
     img = create_diploma("./data/diplome-BG.png", "Truc BIDULE", "14.65", "bien")
     img.save(path)
