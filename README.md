@@ -9,6 +9,7 @@
 - pycryptodome
 - argparse
 - hashlib
+- PIL
 
 ### Question 1
 

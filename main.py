@@ -2,14 +2,18 @@ import argparse
 from message import Steganograph
 from himage import imread
 from Crypto.PublicKey import RSA
-from utils import fread
+from Crypto.Hash import SHA256
+from Crypto.Signature import pkcs1_15
+import base64
+from utils import fread, hash_image, write_text
+from PIL import Image
 
 parser = argparse.ArgumentParser(description="encode messages into pictures")
 
-parser.add_argument('-i', '--input', type=str, required=True, help='path to the image')
-parser.add_argument('-o','--output', type=str, required=True, help='path to the output image')
-parser.add_argument('-m', '--message', type=str, required=True, help='path to the message file')
-# parser.add_argument('-k', '--key', type=str, required=True, help='path to the message file')
+# parser.add_argument('-i', '--input', type=str, required=True, help='path to the image')
+# parser.add_argument('-o','--output', type=str, required=True, help='path to the output image')
+# parser.add_argument('-m', '--message', type=str, required=True, help='path to the message file')
+# # parser.add_argument('-k', '--key', type=str, required=True, help='path to the message file')
 
 args = vars(parser.parse_args())
 
@@ -42,8 +46,45 @@ def generate_keys(key_size=2048, passphrase="Clé sécurisée"):
     with open("./data/public.pem", "wb") as f:
         f.write(public_key)
 
+
+def sign_file(path_img: str, path_key: str = "./data/private.pem", passphrase="Clé sécurisée"):
+    """Generate a signature for a given file and a given key"""
+
+    h = hash_image(path_img)
+
+    with open(path_key, "rb") as f:
+        key = RSA.import_key(f.read(), passphrase=passphrase)
+
+    signature = pkcs1_15.new(key).sign(h)
+
+    return base64.b64encode(signature).decode(), key
+
+
+def check_signature(public_key, h_img, signature):
+
+    signature = base64.b64decode(signature)
+
+    try:
+        pkcs1_15.new(public_key).verify(h_img, signature)
+        print("Signature valide !")
+    except ValueError:
+        print("Signature invalide !")
+
+
+def create_diploma(path_image: str, student: str, average: str, merit: str):
+    """Create a diploma with visible and hidden informations"""
+    
+    img = Image.open(path_image)
+    pass
+
+
 def main():
-    hide_message()
+    # hide_message()
+    signature, key = sign_file("./data/diplome-BG.png")
+    h_img = hash_image("./data/diplome-BG.png")
+    check_signature(key.public_key(), h_img, signature)
+    img = write_text(Image.open("./data/diplome_ecrit.png"), "Ouistitos", (1, 1))
+    img.save("./data/diplome_ecrit.png")
     # generate_keys()
 
 main()
