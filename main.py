@@ -67,30 +67,66 @@ def check_signature(public_key, h_img, signature):
     try:
         pkcs1_15.new(public_key).verify(h_img, signature)
         print("Signature valide !")
+        return True
     except ValueError:
         print("Signature invalide !")
+        return False
 
 
-def create_diploma(template_path: str, student: str, average: str, merit: str):
+def create_diploma(template_path: str, student: str, date_birth: str, year: str, average: str, merit: str):
     """Create a diploma with visible and hidden informations"""
     
     img = Image.open(template_path)
     
     # VISIBLE
+    img = write_text(img, f"Université {'TRUCMACHIN'[::-1]}", (345, 150))
     img = write_text(img, "Diplôme national de master en informatique".upper(), (210, 200))
+    img = write_text(img, f"Session : {year}", (400, 235))
     img = write_text(img, f"Obtenu par : {student}", (345, 300))
-    img = write_text(img, f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}", (160, 400))
+    img = write_text(img, f"Né(e) le {date_birth}", (390, 350))
+    img = write_text(img, f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}", (160, 420))
 
     student_name = student.replace(" ", "_")
     new_path = f"./data/diplome-{student_name}.png"
     img.save(new_path)
 
+    # clean lsb (useful for the verify_diploma function)
+    steganograph = Steganograph()
+    steganograph.set_im(imread(new_path))
+    steganograph.clean_lsb()
+    steganograph.export(new_path)
+
     # HIDDEN
     generate_keys(passphrase=student_name)
     signature, key = sign_file(new_path, passphrase=student_name)
-    img = write_text(img, signature, (0, 500))
+    steganograph = Steganograph()
+    steganograph.set_im(imread(new_path))
+    steganograph.set_msg(signature)
+    steganograph.write_msg()
+    steganograph.export(new_path)
 
-    return img
+    print(f"SIGNATURE WRITTEN : {signature}")
+
+    return img, key.public_key()
+
+
+def verify_diploma(student: str, public_key):
+    """Verify if the diploma is authentic. Get the hidden signature, remove it, and resign diploma to check if it's the same signature."""
+
+    student_name = student.replace(" ", "_")
+    path = f"./data/diplome-{student_name}.png"
+
+    # get and remove hidden signature
+    steganograph = Steganograph()
+    steganograph.set_im(imread(path))
+    signature = steganograph.read_msg()
+    steganograph.clean_lsb()
+    steganograph.export(path)
+
+    print(f"SIGNATURE GET : {signature}")
+
+    # hash diploma to check if it's the same as his signature
+    return check_signature(public_key, hash_image(path), signature)
 
 
 def main():
@@ -99,8 +135,10 @@ def main():
     # h_img = hash_image("./data/diplome-BG.png")
     # check_signature(key.public_key(), h_img, signature)
     path = "./data/diplome_ecrit.png"
-    img = create_diploma("./data/diplome-BG.png", "Truc BIDULE", "14.65", "bien")
-    img.save(path)
+    student = "Truc BIDULE"
+    img, key = create_diploma("./data/diplome-BG.png", student, "11/11/1111", "2024", "14.65", "bien")
+    print(verify_diploma(student, key.public_key()))
+    # img.save(path)
     # generate_keys()
 
 main()
