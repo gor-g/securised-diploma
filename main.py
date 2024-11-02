@@ -105,8 +105,6 @@ def create_diploma(template_path: str, student: str, date_birth: str, year: str,
     steganograph.write_msg()
     steganograph.export(new_path)
 
-    print(f"SIGNATURE WRITTEN : {signature}")
-
     return img, key.public_key()
 
 
@@ -123,22 +121,17 @@ def verify_diploma(student: str, public_key):
     steganograph.clean_lsb()
     steganograph.export(path)
 
-    print(f"SIGNATURE GET : {signature}")
-
     # hash diploma to check if it's the same as his signature
     return check_signature(public_key, hash_image(path), signature)
 
 
 def main():
     # hide_message()
-    # signature, key = sign_file("./data/diplome-BG.png")
-    # h_img = hash_image("./data/diplome-BG.png")
-    # check_signature(key.public_key(), h_img, signature)
-    path = "./data/diplome_ecrit.png"
     student = "Truc BIDULE"
     img, key = create_diploma("./data/diplome-BG.png", student, "11/11/1111", "2024", "14.65", "bien")
-    print(verify_diploma(student, key.public_key()))
-    # img.save(path)
-    # generate_keys()
+
+    with open("./data/public.pem", "rb") as k:
+        public_key = RSA.import_key(k.read())
+    print(verify_diploma(student, public_key))
 
 main()
