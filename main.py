@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description="encode messages into pictures")
 # parser.add_argument('-m', '--message', type=str, required=True, help='path to the message file')
 # # parser.add_argument('-k', '--key', type=str, required=True, help='path to the message file')
 
-args = vars(parser.parse_args())
+# args = vars(parser.parse_args())
 
 def hide_message():
     """Hide a message into a picture"""
@@ -96,9 +96,11 @@ def create_diploma(template_path: str, student: str, date_birth: str, year: str,
     steganograph.clean_lsb()
     steganograph.export(new_path)
 
-    # HIDDEN
+    # sign file
     generate_keys(passphrase=student_name)
     signature, key = sign_file(new_path, passphrase=student_name)
+
+    # HIDDEN
     steganograph = Steganograph()
     steganograph.set_im(imread(new_path))
     steganograph.set_msg(signature)
@@ -113,25 +115,50 @@ def verify_diploma(student: str, public_key):
 
     student_name = student.replace(" ", "_")
     path = f"./data/diplome-{student_name}.png"
+    check_path = f"./data/diplome-{student_name}-check.png"
 
     # get and remove hidden signature
     steganograph = Steganograph()
     steganograph.set_im(imread(path))
     signature = steganograph.read_msg()
     steganograph.clean_lsb()
-    steganograph.export(path)
+    steganograph.export(check_path)
 
     # hash diploma to check if it's the same as his signature
-    return check_signature(public_key, hash_image(path), signature)
+    return check_signature(public_key, hash_image(check_path), signature)
 
 
 def main():
     # hide_message()
-    student = "Truc BIDULE"
-    img, key = create_diploma("./data/diplome-BG.png", student, "11/11/1111", "2024", "14.65", "bien")
 
-    with open("./data/public.pem", "rb") as k:
-        public_key = RSA.import_key(k.read())
-    print(verify_diploma(student, public_key))
+    import sys
+    if len(sys.argv) <= 1:
+        print("Erreur")
+        return
+    
+    if sys.argv[1] == "create":
+        if len(sys.argv) != 7:
+            print(f"usage: {sys.argv[0]} create \"Truc BIDULE\" \"11/11/1111\" 2024 14.65 \"bien\"")
+            return
+        
+        img, key = create_diploma("./data/diplome-BG.png", sys.argv[2], 
+                                    sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+        
+    elif sys.argv[1] == "verify":
+        if len(sys.argv) != 3:
+            print(f"usage: {sys.argv[0]} verify \"Truc BIDULE\"")
+            return
+        
+        with open("./data/public.pem", "rb") as k:
+            public_key = RSA.import_key(k.read())
+        print(verify_diploma(sys.argv[2], public_key))
+
+    else:
+        student = "Truc BIDULE"
+        img, key = create_diploma("./data/diplome-BG.png", student, "11/11/1111", "2024", "14.65", "bien")
+
+        with open("./data/public.pem", "rb") as k:
+            public_key = RSA.import_key(k.read())
+        print(verify_diploma(student, public_key))
 
 main()
