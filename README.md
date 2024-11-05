@@ -29,6 +29,18 @@ Utilisation :
 python3 main.py text ./data/diplome-BG.png "Ceci est du texte" ./data/output-text.png
 ```
 
+### Question 4
+Utilisation :
+```sh
+python3 main.py create "Truc BIDULE" "11/11/1111" 2024 14.65 "bien"
+```
+
+### Question 5
+Utilisation :
+```sh
+python3 main.py verify "Truc BIDULE"
+```
+
 ### Génération d'un diplôme
 1. On écrit les infos en clair sur le diplôme (nom, moyenne, date de naissance, année...).
 2. Les bits de poids faibles de l'image sont mis à zéro
