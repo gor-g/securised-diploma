@@ -133,7 +133,10 @@ def main():
 
     import sys
     if len(sys.argv) <= 1:
-        print("Erreur")
+        print("Aucun argument entré, usages ci-dessous :", end="\n\n")
+        print(f"Ecrire du texte sur une image : {sys.argv[0]} text ./data/diplome-BG.png \"Ceci est du texte\" ./data/output-text.png", end="\n\n")
+        print(f"Générer un diplôme : {sys.argv[0]} create \"Truc BIDULE\" \"11/11/1111\" 2024 14.65 \"bien\"", end="\n\n")
+        print(f"Vérifier un diplôme : {sys.argv[0]} verify \"Truc BIDULE\"", end="\n\n")
         return
     
     if sys.argv[1] == "text":
@@ -145,7 +148,7 @@ def main():
         img = write_text(img, sys.argv[3], (100, 100))
         img.save(sys.argv[4])
     
-    if sys.argv[1] == "create":
+    elif sys.argv[1] == "create":
         if len(sys.argv) != 7:
             print(f"usage: {sys.argv[0]} create \"Truc BIDULE\" \"11/11/1111\" 2024 14.65 \"bien\"")
             return
