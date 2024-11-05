@@ -21,9 +21,13 @@ python3 main.py -i data/diplome-BG.png -o data/diplome-BG_msg.png -m data/msg.tx
 
 ### Question 2
 
-L'université cache (ou écrit en hexa dans un coin ou QR code) un message (signature) dans le diplôme, et publie la clé publique sur son site. Ainsi, tout le monde peut s'assurer que le diplôme est émis par l'université.
-La clé privée, pour chiffrer le message, est gardé secret par l'université.
+_L'université cache (ou écrit en hexa dans un coin ou QR code) un message (signature) dans le diplôme, et publie la clé publique sur son site. Ainsi, tout le monde peut s'assurer que le diplôme est émis par l'université. La clé privée, pour chiffrer le message, est gardé secret par l'université._
 
+### Question 3
+Utilisation :
+```sh
+python3 main.py text ./data/diplome-BG.png "Ceci est du texte" ./data/output-text.png
+```
 
 ### Génération d'un diplôme
 1. On écrit les infos en clair sur le diplôme (nom, moyenne, date de naissance, année...).

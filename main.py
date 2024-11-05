@@ -136,6 +136,15 @@ def main():
         print("Erreur")
         return
     
+    if sys.argv[1] == "text":
+        if len(sys.argv) != 5:
+            print(f"usage: {sys.argv[0]} text ./data/diplome-BG.png \"Ceci est du texte\" ./data/output-text.png")
+            return
+        
+        img = Image.open(sys.argv[2])
+        img = write_text(img, sys.argv[3], (100, 100))
+        img.save(sys.argv[4])
+    
     if sys.argv[1] == "create":
         if len(sys.argv) != 7:
             print(f"usage: {sys.argv[0]} create \"Truc BIDULE\" \"11/11/1111\" 2024 14.65 \"bien\"")
@@ -154,11 +163,12 @@ def main():
         print(verify_diploma(sys.argv[2], public_key))
 
     else:
-        student = "Truc BIDULE"
-        img, key = create_diploma("./data/diplome-BG.png", student, "11/11/1111", "2024", "14.65", "bien")
+        return
+        # student = "Truc BIDULE"
+        # img, key = create_diploma("./data/diplome-BG.png", student, "11/11/1111", "2024", "14.65", "bien")
 
-        with open("./data/public.pem", "rb") as k:
-            public_key = RSA.import_key(k.read())
-        print(verify_diploma(student, public_key))
+        # with open("./data/public.pem", "rb") as k:
+        #     public_key = RSA.import_key(k.read())
+        # print(verify_diploma(student, public_key))
 
 main()

@@ -50,6 +50,14 @@ Enfin, la signature extraite est comparée avec la nouvelle empreinte de l'image
 **Si le moindre pixel de cette image a été modifié, la nouvelle empreinte de l'image ne coincidera pas avec la signature extraite et le diplôme perdra son authenticité.**
 
 ***Faire un schéma fonctionnel général (signature et vérification)***
+                                      RSA
+          LSB = 0               H   ------> Signature
+Diplôme  --------->  Diplôme ------>                    Diplôme signé
+
+Vérif :
+                Extraction signature                     LSB = 0             H
+Diplôme signé ------------------------> Diplôme signé  ----------> Diplôme -----> comparaison empreinte
+                                          signature                signature ---->  et signature
 
 ## Choix techniques
 Pour réaliser ce prototype, nous avons utilisé le langage de programmation Python. Il contient de nombreuses bibliothèques utiles pour la cryptographie et la manipulation d'images. De plus, il est possible de faire tourner cette solution sur un serveur avec un framework de développement web tel que Flask.
@@ -62,3 +70,8 @@ L'algorithme de hachage utilisé est SHA-256 et la signature est générée à l
 Tout cela est disponible dans la bibliothèque pycryptodome.
 
 Tout cela permet donc de faire tourner notre prototype sur un serveur Flask de l'université, où l'utilisateur enverrait l'image sur ce serveur ainsi que la clé publique afin de vérifier l'authenticité du diplôme.
+
+## Conclusion
+En conclusion, on a ici une manière simple et efficace d'authentifier notre diplôme. La modification du moindre pixel de cette image entrainera la génération d'une empreinte totalement différente, rendant la signature invalide lors de la vérification.
+
+Pour mettre en place ce service, il est raisonnable de pouvoir mettre en place un serveur web Flask, avec une route qui dirige l'utilisateur vers un formulaire. Sur celui-ci, on téléverse notre copie numérique du diplôme et le serveur nous dit si le fichier est authentique ou non.
