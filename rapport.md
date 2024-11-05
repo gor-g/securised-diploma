@@ -12,7 +12,7 @@ Doit contenir :
 - conclusion sur la faisabilité et l'intérêt du service.
 
 
-## Problèmatique
+## Problématique
 Afin de créer des versions numérique de diplôme infalsifiables, nous avons développer un petit prototype répondant à cette problématique.
 
 Un diplôme contient un certain nombre d'informations qui, combinées ensemble, le rende unique. En effet, il est inscrit le nom et prénom de l'étudiant, sa moyenne et sa date de naissance. Autant de données à caractères personnel qui peuvent être reliées à une seule personne.
@@ -46,7 +46,8 @@ C'est cette version du diplôme, avec la signature cachée, qui est ensuite envo
 Maintenant, pour vérifier l'authenticité du diplôme, il faut extraire la signature cachée dans le diplôme.
 Ensuite, les bits de poids faible sont remis à zéro et l'image du diplôme est hachée à nouveau.
 Enfin, la signature extraite est comparée avec la nouvelle empreinte de l'image en utilisant le clé publique.
-Si le moindre pixel de cette image a été modifié, la nouvelle empreinte de l'image ne coincidera pas avec la signature extraite et le diplôme perdra son authenticité.
+
+**Si le moindre pixel de cette image a été modifié, la nouvelle empreinte de l'image ne coincidera pas avec la signature extraite et le diplôme perdra son authenticité.**
 
 ***Faire un schéma fonctionnel général (signature et vérification)***
 
