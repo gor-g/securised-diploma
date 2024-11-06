@@ -49,25 +49,21 @@ Enfin, la signature extraite est comparée avec la nouvelle empreinte de l'image
 
 **Si le moindre pixel de cette image a été modifié, la nouvelle empreinte de l'image ne coincidera pas avec la signature extraite et le diplôme perdra son authenticité.**
 
-***Faire un schéma fonctionnel général (signature et vérification)***
-                                      RSA
-          LSB = 0               H   ------> Signature
-Diplôme  --------->  Diplôme ------>                    Diplôme signé
+### Génération du diplôme
+![Schéma génération diplôme](./generation-diplome.png "Génération du diplôme")
 
-Vérif :
-                Extraction signature                     LSB = 0             H
-Diplôme signé ------------------------> Diplôme signé  ----------> Diplôme -----> comparaison empreinte
-                                          signature                signature ---->  et signature
+### Vérification du diplôme
+![Schéma vérification diplôme](./verification-diplome.png "Vérification d'un diplôme")
 
 ## Choix techniques
 Pour réaliser ce prototype, nous avons utilisé le langage de programmation Python. Il contient de nombreuses bibliothèques utiles pour la cryptographie et la manipulation d'images. De plus, il est possible de faire tourner cette solution sur un serveur avec un framework de développement web tel que Flask.
 
-Afin de généner le diplôme, nous utilisons la bibliothèque de manipulation d'image Pillow.
+Afin de généner le diplôme, nous utilisons la bibliothèque de manipulation d'image `Pillow`.
 
-Pour cacher et récupérer des informations dans une image, nous utilisons les librairies numpy et himage.
+Pour cacher et récupérer des informations dans une image, nous utilisons les librairies `numpy` et `himage`.
 
 L'algorithme de hachage utilisé est SHA-256 et la signature est générée à l'aide de l'algorithme de cryptographie asymétrique RSA.
-Tout cela est disponible dans la bibliothèque pycryptodome.
+Tout cela est disponible dans la bibliothèque `pycryptodome`.
 
 Tout cela permet donc de faire tourner notre prototype sur un serveur Flask de l'université, où l'utilisateur enverrait l'image sur ce serveur ainsi que la clé publique afin de vérifier l'authenticité du diplôme.
 
