@@ -58,6 +58,90 @@ Tout cela est disponible dans la bibliothèque `pycryptodome`.
 
 Tout cela permet donc de faire tourner notre prototype sur un serveur Flask de l'université, où l'utilisateur enverrait l'image sur ce serveur ainsi que la clé publique afin de vérifier l'authenticité du diplôme.
 
+## Documentation
+Voici les deux points les plus importants du prototype.
+### Création du diplôme
+Tout d'abord, nous avons la fonction de création d'un diplôme
+```py
+def create_diploma(template_path: str, student: str, date_birth: str, year: str, average: str, merit: str):
+    """Create a diploma with visible and hidden informations"""
+```
+Cette fonction prend en paramètre le chemin de l'image de fond du diplôme, le prénom et le nom de l'étudiant, sa date de naissance, l'année d'obtention du diplôme, sa moyenne ainsi que sa mention.
+
+Ensuite, l'image de fond du diplôme est ouverte et les informations sont inscrites dessus en clair.
+```py  
+img = Image.open(template_path)
+
+# VISIBLE
+img = write_text(img, f"Université {'TRUCMACHIN'[::-1]}", (345, 150))
+img = write_text(img, "Diplôme national de master en informatique".upper(), (210, 200))
+img = write_text(img, f"Session : {year}", (400, 235))
+img = write_text(img, f"Obtenu par : {student}", (345, 300))
+img = write_text(img, f"Né(e) le {date_birth}", (390, 350))
+img = write_text(img, f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}", (160, 420))
+
+student_name = student.replace(" ", "_")
+new_path = f"./data/diplome-{student_name}.png"
+img.save(new_path)
+```
+L'image du diplôme est ensuite sauvegardée dans un nouveau fichier png.
+
+L'étape suivante consiste en mettre à zéro les bits de poids faible de l'image pour pouvoir la signer puis y cacher cette signature.
+```py 
+# clean lsb (useful for the verify_diploma function)
+steganograph = Steganograph()
+steganograph.set_im(imread(new_path))
+steganograph.clean_lsb()
+steganograph.export(new_path)
+```
+
+Puis, le diplôme est signé.
+```py 
+# sign file
+generate_keys(passphrase=student_name)
+signature, key = sign_file(new_path, passphrase=student_name)
+```
+
+Enfin, on cache la signature du diplôme dans l'image.
+```py 
+# HIDDEN
+steganograph = Steganograph()
+steganograph.set_im(imread(new_path))
+steganograph.set_msg(signature)
+steganograph.write_msg()
+steganograph.export(new_path)
+
+return img, key.public_key()
+```
+
+### Vérification du diplôme
+Ensuite, nous avons une fonction pour vérifier l'authenticité d'un diplôme.
+```py
+def verify_diploma(student: str, public_key):
+    """Verify if the diploma is authentic. Get the hidden signature, remove it, and resign diploma to check if it's the same signature."""
+```
+La fonction prend en paramètre le nom de l'étudiant (sous la forme Prénom NOM) ainsi que la clé publique pour vérifier la signature.
+
+La fonction récupère ensuite la signature dans le diplôme et crée une copie du diplôme, avec les bits de poids faible remis à zéro.
+```py
+student_name = student.replace(" ", "_")
+path = f"./data/diplome-{student_name}.png"
+check_path = f"./data/diplome-{student_name}-check.png"
+
+# get and remove hidden signature
+steganograph = Steganograph()
+steganograph.set_im(imread(path))
+signature = steganograph.read_msg()
+steganograph.clean_lsb()
+steganograph.export(check_path)
+```
+
+La copie du diplôme est ensuite hachée puis la signature extraite est comparée avec cette empreinte à l'aide de la clé publique afin de vérifier l'authenticité du diplôme.
+```py
+# hash diploma to check if it's the same as his signature
+return check_signature(public_key, hash_image(check_path), signature)
+```
+
 ## Conclusion
 En conclusion, on a ici une manière simple et efficace d'authentifier notre diplôme. La modification du moindre pixel de cette image entrainera la génération d'une empreinte totalement différente, rendant la signature invalide lors de la vérification.
 
