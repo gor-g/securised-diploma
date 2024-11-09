@@ -1,0 +1,7 @@
+
+# requirements.txt
+
+numpy
+himage
+pycryptodome
+pillow
