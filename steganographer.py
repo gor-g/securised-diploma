@@ -12,11 +12,14 @@ class Steganographer:
         self.shape: tuple[int,int,int] | tuple[int, int]
         self.mask_size: int
         self.im: np.ndarray
-        self.flat_im: np.ndarray
+        self.flat_im: np.ndarray # we manipulate the flattened image, that way it doesn't matter wether its colored or grayscale
         self.msg:str
         self.bin_msg:np.ndarray
 
     def set_im(self, im:np.ndarray):
+        """
+        set the image to be used for steganography
+        """
         vmin, vmax = hi.deduce_limits(im)
         if vmax <= 1:
             im = np.asarray(im*255, dtype=np.uint8)
@@ -24,16 +27,26 @@ class Steganographer:
         self.flat_im = im.flatten()
 
     def set_msg(self, msg:str):
+        """
+        set the message to be written to the image
+        """
         self.msg = msg
         byte_string = bytes(msg, 'utf-8')
         self.bin_msg = np.unpackbits(np.frombuffer(byte_string, dtype=np.uint8))
 
     def write_msg(self):
+        """
+        write the actuall message to the image
+        """
         self.clean_lsb()
         mask = self.message_to_mask()
         self.apply_mask(mask)
 
     def read_msg(self):
+        """
+        read the message from the image
+        """
+        # read the last bit of each value in the image
         mask = np.asarray(self.flat_im%2, dtype=np.uint8) 
 
         bin_msg_size = self.decode_size(mask[:64])
@@ -57,6 +70,10 @@ class Steganographer:
     
     @staticmethod
     def decode_size(bits_array: np.ndarray):
+        """
+        input : 64 bits array that represents the bite length of the message encoded to the image
+        output : int, the size of the message encoded to the image
+        """
         return np.packbits(bits_array).view(np.uint64)[0]
     
     def message_to_mask(self):
@@ -73,11 +90,7 @@ class Steganographer:
 
         return mask 
 
-    def mask2msg(self, binary_array):
-        msg = np.packbits(binary_array).tobytes().decode('utf-8')
 
-
-        
 
     def clean_lsb(self):
         self.flat_im = self.flat_im - self.flat_im%2
