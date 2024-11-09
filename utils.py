@@ -12,7 +12,7 @@ def hash_image(path_img: str):
 
     return SHA256.new(data)
 
-def write_text(img: Image, text: str, pos: tuple[int, int]):
+def write_text(img: Image.Image, text: str, pos: tuple[int, int]):
     """Write text on an image"""
     
     draw = ImageDraw.Draw(img)

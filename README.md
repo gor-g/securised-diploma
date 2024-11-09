@@ -16,7 +16,8 @@
 Usage : vous devez avoir sur votre PC une image à modifier, et un fichier .txt contenant le message
 
 ```sh
-python3 main.py -i data/diplome-BG.png -o data/diplome-BG_msg.png -m data/msg.txt
+python3 main.py insert data/diplome-BG.png "Le mystère des Pyramides, c’est le mystère de la conscience dans laquelle on n’entre pas." data/diplome-BG_msg.png
+python3 main.py extract data/diplome-BG_msg.png
 ```
 
 ### Question 2
