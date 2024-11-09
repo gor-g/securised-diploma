@@ -14,7 +14,7 @@ class Runner:
         self.__getattribute__(command)(**args)
 
     @staticmethod
-    def hide(image: str, message: str, output: str):
+    def insert(image: str, message: str, output: str):
         """
         Hide a message in an image
         --------------------------
@@ -28,7 +28,7 @@ class Runner:
         """
         steganographer = Steganographer()
         steganographer.set_im(imread(image))
-        steganographer.set_msg(fread(message))
+        steganographer.set_msg(message)
 
         steganographer.write_msg()
         steganographer.export(output)
@@ -45,7 +45,7 @@ class Runner:
             The message read from the image
         --------------------------
         """
-        return Steganographer().set_im(imread(image)).read_msg()
+        print(Steganographer().set_im(imread(image)).read_msg())
 
 
     @staticmethod
