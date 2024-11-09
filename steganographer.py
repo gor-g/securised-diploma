@@ -2,7 +2,7 @@ import himage as hi
 import numpy as np
 import hashlib
 
-class Steganograph:
+class Steganographer:
 
     def __init__(self) -> None:
         self.start: int

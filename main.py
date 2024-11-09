@@ -1,5 +1,5 @@
 import argparse
-from message import Steganograph
+from steganographer import Steganograph
 from himage import imread
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA256
