@@ -15,7 +15,6 @@ class Steganographer:
         self.clear_msg: str
         self.shape: tuple[int,int,int] | tuple[int, int]
         self.mask_size: int
-        self.im: InputImageArray
         self.flat_im: ImageArray # we manipulate the flattened image, that way it doesn't matter wether its colored or grayscale
         self.msg:str
         self.bin_msg: BinArray
@@ -30,7 +29,6 @@ class Steganographer:
         else:
             im = np.asarray(im, dtype=np.uint8)
         self.shape = im.shape
-        self.im = im
         self.flat_im = im.flatten()
         return self
 
@@ -67,7 +65,7 @@ class Steganographer:
         return byte_string.tobytes().decode('utf-8')
 
     def export(self, path: str):
-        hi.imwrite(self.flat_im.reshape(self.im.shape), path) # type: ignore
+        hi.imwrite(self.flat_im.reshape(self.shape), path) # type: ignore
 
     @staticmethod
     def encode_size(size:int):
@@ -105,4 +103,3 @@ class Steganographer:
 
     def apply_mask(self, mask: ImageArray):
         self.flat_im = self.flat_im + mask
-        self.im = self.flat_im.reshape(self.im.shape)
