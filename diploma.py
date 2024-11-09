@@ -37,17 +37,23 @@ class Diploma:
 
         return img
 
-    def generate_signature(self, path_img: str, path_key: str = "./data/private.pem", passphrase:str ="Clé sécurisée"):
+    def generate_signature(self, path_img: str):
         """Generate a signature for a given file and a given key"""
 
         h = self.hash_image(path_img)
 
-        with open(path_key, "rb") as f:
-            key = RSA.import_key(f.read(), passphrase=passphrase)
+        key = None
+        while key is None:
+            try:
+                with open(self.env_service.PRIVATE_KEY_PATH, "rb") as f:
+                    key = RSA.import_key(f.read(), passphrase=self.env_service.get_passphrase())
+            except ValueError:
+                print("Mot de passe incorrect")
+                key = None
 
         signature = pkcs1_15.new(key).sign(h)
 
-        return base64.b64encode(signature).decode(), key
+        return base64.b64encode(signature).decode()
 
 
     def check_signature(self, public_key:RsaKey , h_img: "pkcs1_15.Hash", signature:str):
@@ -81,42 +87,44 @@ class Diploma:
         ]
         img = self.write_text(img, text)
         student_name = student.replace(" ", "_")
-        new_path = f"./data/diplome-{student_name}.png"
-        img.save(new_path)
+        filled_diploma_im_path = self.env_service.get_diploma_output_path(student_name)
+        img.save(filled_diploma_im_path)
 
-        # clean lsb (useful for the verify_diploma function)
+        # we clean the LSBs before we generate the signature, so that when calling verify_signature
+        # we know that we must call it on the image with a clean LSBs
         steganographer = Steganographer()
-        steganographer.set_im(imread(new_path))
+        steganographer.set_im(imread(filled_diploma_im_path))
         steganographer.clean_lsb()
-        steganographer.export(new_path)
+        steganographer.export(filled_diploma_im_path)
 
         # sign file
-        self.env_service.generate_keys(passphrase=student_name)
-        signature, key = self.generate_signature(new_path, passphrase=student_name)
+        signature= self.generate_signature(filled_diploma_im_path)
 
         # HIDDEN
         steganographer = Steganographer()
-        steganographer.set_im(imread(new_path))
+        steganographer.set_im(imread(filled_diploma_im_path))
         steganographer.set_msg(signature)
         steganographer.write_msg()
-        steganographer.export(new_path)
+        steganographer.export(filled_diploma_im_path)
 
-        return img, key.public_key()
+        return img
 
 
     def verify_diploma(self, student: str, public_key:RsaKey):
         """Verify if the diploma is authentic. Get the hidden signature, remove it, and re-sign diploma to check if it's the same signature."""
 
         student_name = student.replace(" ", "_")
-        path = f"./data/diplome-{student_name}.png"
-        check_path = f"./data/diplome-{student_name}-check.png"
+        im_path = self.env_service.get_diploma_output_path(student_name)
+        nolsb_im_path = self.env_service.get_nolsb_diploma_tmp_path(student_name)
 
-        # get and remove hidden signature
+        # get the hidden signature
         steganographer = Steganographer()
-        steganographer.set_im(imread(path))
+        steganographer.set_im(imread(im_path))
         signature = steganographer.read_msg()
-        steganographer.clean_lsb()
-        steganographer.export(check_path)
 
-        # hash diploma to check if it's the same as his signature
-        return self.check_signature(public_key, self.hash_image(check_path), signature)
+        # clean the LSBs to get the version of the image used to generate the signature
+        steganographer.clean_lsb()
+        steganographer.export(nolsb_im_path)
+
+        # hash diploma to check if it's the same as the one used to generate the signature
+        return self.check_signature(public_key, self.hash_image(nolsb_im_path), signature)

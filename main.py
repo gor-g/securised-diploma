@@ -18,6 +18,10 @@ parser_text.add_argument('template', type=str, help='path to the dimploma templa
 parser_text.add_argument('message', type=str, help='plain text message')
 parser_text.add_argument('output', type=str, help='path to the output image')
 
+parser_keygen = subparsers.add_parser('keygen', help='Generate RSA public/private key pair')
+parser_keygen.add_argument('key_size', type=int, help='key size')
+parser_keygen.add_argument('passphrase', type=str, help='passphrase')
+
 parser_create = subparsers.add_parser('create', help='Create a diploma')
 # parser_create.add_argument('template', type=str, help='path to the dimploma template image')
 parser_create.add_argument('student', type=str, help='plain text ')

@@ -2,6 +2,7 @@
 from typing import Any
 from steganographer import Steganographer
 from diploma import Diploma
+from env_service import EnvService
 from himage import imread # type: ignore
 from utils import write_text
 from PIL import Image
@@ -67,11 +68,15 @@ class Runner:
         img.save(output)
 
     @staticmethod
+    def keygen(key_size:int, passphrase:str):
+        EnvService().generate_keys(key_size, passphrase)
+
+    @staticmethod
     def create(student:str, date_birth:str, year:int, average:float, merit:str):
-        Diploma().create_diploma("./data/diplome-BG.png", student, date_birth, year, average, merit)
+        Diploma().create_diploma(EnvService.TEMPLATE_PATH, student, date_birth, year, average, merit)
 
     @staticmethod
     def verify(student: str):
-        with open("./data/public.pem", "rb") as k:
+        with open(EnvService.PUBLIC_KEY_PATH, "rb") as k:
             public_key = RSA.import_key(k.read())
         print(Diploma().verify_diploma(student, public_key))
