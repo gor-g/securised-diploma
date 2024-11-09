@@ -106,14 +106,3 @@ class Steganographer:
     def apply_mask(self, mask: ImageArray):
         self.flat_im = self.flat_im + mask
         self.im = self.flat_im.reshape(self.im.shape)
-
-    # def process_key(self, key:str):
-    #     h = hashlib.sha1(key.encode())
-        
-    #     hash_hex = h.hexdigest()
-
-    #     seed = int(hash_hex, 16)
-
-    #     self.permutation = np.arange(self.im.size, np.int64)
-    #     np.random.seed(seed=seed)
-    #     np.random.shuffle(self.permutation)
