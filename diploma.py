@@ -1,34 +1,46 @@
 
 from steganographer import Steganographer
+from env_service import EnvService
 from himage import imread # type: ignore
-from utils import hash_image, write_text
 from PIL import Image
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
 from Crypto.PublicKey.RSA import RsaKey
+from Crypto.Hash import SHA256
+from PIL import Image, ImageDraw, ImageFont
+
 
 import base64
 
 
 class Diploma:   
-        
-    def generate_keys(self, key_size:int = 2048, passphrase:str = "Clé sécurisée"):
-        """Generate a public key and a private key in 2 files : `public.pem` and `private.pem`"""
+    
+    def __init__(self) -> None:
+        self.env_service = EnvService()
+        self.font = ImageFont.truetype(self.env_service.FONT_PATH, self.env_service.FONT_SIZE)
 
-        key = RSA.generate(key_size)
-        private_key = key.export_key(passphrase=passphrase)
-        with open("./data/private.pem", "wb") as f:
-            f.write(private_key)
+    def hash_image(self, path_img: str):
+        with open(path_img, "rb") as f:
+            data = f.read()
 
-        public_key = key.public_key().export_key()
-        with open("./data/public.pem", "wb") as f:
-            f.write(public_key)
+        return SHA256.new(data)
+    
+    def write_text(self, img: Image.Image, text: list[str]):
+        """Write text on an image"""
+        draw = ImageDraw.Draw(img)
+        curr_height = self.env_service.TEMPLATE_MARGIN
+        for line in text:
+            width = self.font.getlength(line)
+            pos = ((img.width - width)/2, curr_height)
+            draw.text(pos, line, (0, 0, 0), self.font)
+            curr_height += self.font.size*2
 
+        return img
 
     def generate_signature(self, path_img: str, path_key: str = "./data/private.pem", passphrase:str ="Clé sécurisée"):
         """Generate a signature for a given file and a given key"""
 
-        h = hash_image(path_img)
+        h = self.hash_image(path_img)
 
         with open(path_key, "rb") as f:
             key = RSA.import_key(f.read(), passphrase=passphrase)
@@ -57,13 +69,17 @@ class Diploma:
         img = Image.open(template_path)
         
         # VISIBLE
-        img = write_text(img, f"Université {'TRUCMACHIN'[::-1]}", (345, 150))
-        img = write_text(img, "Diplôme national de master en informatique".upper(), (210, 200))
-        img = write_text(img, f"Session : {year}", (400, 235))
-        img = write_text(img, f"Obtenu par : {student}", (345, 300))
-        img = write_text(img, f"Né(e) le {date_birth}", (390, 350))
-        img = write_text(img, f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}", (160, 420))
-
+        text = [
+            f" Université {'TRUCMACHIN'[::-1]}",
+            f"Diplôme : Diplôme national de master en informatique",
+            "",
+            f"Session : {year}",
+            f"Obtenu par : {student}",
+            f"Né(e) le {date_birth}",
+            "",
+            f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}",
+        ]
+        img = self.write_text(img, text)
         student_name = student.replace(" ", "_")
         new_path = f"./data/diplome-{student_name}.png"
         img.save(new_path)
@@ -75,7 +91,7 @@ class Diploma:
         steganographer.export(new_path)
 
         # sign file
-        self.generate_keys(passphrase=student_name)
+        self.env_service.generate_keys(passphrase=student_name)
         signature, key = self.generate_signature(new_path, passphrase=student_name)
 
         # HIDDEN
@@ -103,4 +119,4 @@ class Diploma:
         steganographer.export(check_path)
 
         # hash diploma to check if it's the same as his signature
-        return self.check_signature(public_key, hash_image(check_path), signature)
+        return self.check_signature(public_key, self.hash_image(check_path), signature)
