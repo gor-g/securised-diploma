@@ -3,7 +3,7 @@ from typing import Any
 from steganographer import Steganographer
 from diploma import Diploma
 from himage import imread # type: ignore
-from utils import fread, write_text
+from utils import write_text
 from PIL import Image
 from Crypto.PublicKey import RSA
 
@@ -34,7 +34,7 @@ class Runner:
         steganographer.export(output)
 
     @staticmethod
-    def extract(image: str) -> str:
+    def extract(image: str):
         """
         Read a message written with steganographer, from an image
         --------------------------
