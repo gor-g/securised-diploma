@@ -23,10 +23,10 @@ Les autres informations présentes sur le diplôme sont :
 - le nom du diplôme
 - la session
 
-Tout cela est écrit en clair sur le diplôme et rend la combinaison de toutes ces informations le rendent unique.
+Tout cela est écrit en clair sur le diplôme et la combinaison de toutes ces informations le rendent unique.
 *Les bits de poids faible de l'image sont mis à zéro, ce qui nous servira plus tard.*
 
-Ensuite, le diplôme est haché avec un algorithme de hachage. Cela génère une empreinte pour notre image qui est à son tour signée à l'aide d'un algorithme de cryptographie asymétrique.
+Ensuite, le diplôme est haché avec un algorithme de hachage. Cela génère une empreinte pour notre image, qui est à son tour signée à l'aide d'un algorithme de cryptographie asymétrique.
 La clé privée est connue seulement par l'université alors que la clé publique est disponible pour tout le monde.
 
 Nous obtenons donc une signature unique pour notre diplôme.
@@ -47,7 +47,7 @@ Enfin, la signature extraite est comparée avec la nouvelle empreinte de l'image
 ![Schéma vérification diplôme](./verification-diplome.png "Vérification d'un diplôme")
 
 ## Choix techniques
-Pour réaliser ce prototype, nous avons utilisé le langage de programmation Python. Il contient de nombreuses bibliothèques utiles pour la cryptographie et la manipulation d'images. De plus, il est possible de faire tourner cette solution sur un serveur avec un framework de développement web tel que Flask.
+Pour réaliser ce prototype, nous avons utilisé le langage de programmation Python. Il contient de nombreuses bibliothèques utiles pour la cryptographie et la manipulation d'images. De plus, il est possible de faire tourner cette solution sur un serveur, avec un framework de développement web tel que Flask.
 
 Afin de généner le diplôme, nous utilisons la bibliothèque de manipulation d'image `Pillow`.
 
@@ -59,7 +59,7 @@ Tout cela est disponible dans la bibliothèque `pycryptodome`.
 Tout cela permet donc de faire tourner notre prototype sur un serveur Flask de l'université, où l'utilisateur enverrait l'image sur ce serveur ainsi que la clé publique afin de vérifier l'authenticité du diplôme.
 
 ## Documentation
-Voici les deux points les plus importants du prototype.
+Les deux points les plus importants du prototype sont la création du diplôme et sa vérification.
 ### Création du diplôme
 Tout d'abord, nous avons la fonction de création d'un diplôme
 ```py
@@ -142,7 +142,42 @@ La copie du diplôme est ensuite hachée puis la signature extraite est comparé
 return check_signature(public_key, hash_image(check_path), signature)
 ```
 
+### Signature d'un fichier
+Afin de signer notre diplôme, on utilise la fonction suivante :
+```py
+def sign_file(path_img: str, path_key: str = "./data/private.pem", passphrase="Clé sécurisée"):
+    """Generate a signature for a given file and a given key"""
+```
+
+L'image est d'abord hachée :
+```py
+h = hash_image(path_img)
+```
+On obtient alors une empreinte qui ressemble à cela :
+```sh
+Empreinte de "./data/diplome-Truc_BIDULE.png" = f92c8515656b7bcb8687e2c8a1d1c7dee7b0c36bf3f186b99522744ce1e77eb4
+```
+
+Puis, on récupère la clé privée de l'université.
+```py
+with open(path_key, "rb") as f:
+    key = RSA.import_key(f.read(), passphrase=passphrase)
+```
+
+Enfin, l'empreinte du diplôme est signée avec la clé privée de l'université, selon les standards de cryptographie à clé publique RSA.
+```py
+signature = pkcs1_15.new(key).sign(h)
+```
+
+On retourne ensuite la signature encodée en base 64 et prête à être cachée dans notre diplôme.
+```py
+return base64.b64encode(signature).decode(), key
+```
+```sh
+Signature de "./data/diplome-Truc_BIDULE.png" = EqdTTkdPsbNGi8mTBw04S8TiJsRHgaHWDJof9JT3WIpfCyyaInQh/vrGOLFm1qb0w4iRL+B+pz4UubP1mE+FVn+WmTVsyllIjD+Q/QqtmzDvfUtt/htZRh/k8gK/yAdHQW1ORnMoDIaz99Rldr5rZulqiEM7r9Y5nmFLJly9D6mLV11jAK9qzmli1eXkqUZjN2CoL/xX+rbiIU95RDNRUa3uW88uR/MONOTV4EsDnMboFXadMlxh30Ze0DrwqynzYs/E6304kKlPBYOKx8LnZmWUtXt3LtEU+E1zifetfNUhIzvrQS7dQ5o04qQsnmFJOm0bpsIj/82p9X/slKVd1g==
+```
+
 ## Conclusion
 En conclusion, on a ici une manière simple et efficace d'authentifier notre diplôme. La modification du moindre pixel de cette image entrainera la génération d'une empreinte totalement différente, rendant la signature invalide lors de la vérification.
 
-Pour mettre en place ce service, il est raisonnable de pouvoir mettre en place un serveur web Flask, avec une route qui dirige l'utilisateur vers un formulaire. Sur celui-ci, on téléverse notre copie numérique du diplôme et le serveur nous dit si le fichier est authentique ou non.
+Pour mettre en place ce service, il est raisonnable de pouvoir implémenter un serveur web Flask, avec une route qui redirige l'utilisateur vers un formulaire. Sur celui-ci, on téléverse notre copie numérique du diplôme et le serveur détermine (avec la procédure susrelatée) si le fichier est authentique ou non.
