@@ -23,7 +23,12 @@ python3 main.py extract data/tmp/diplome-BG_msg.png
 
 ### Question 2
 
-_L'université cache (ou écrit en hexa dans un coin ou QR code) un message (signature) dans le diplôme, et publie la clé publique sur son site. Ainsi, tout le monde peut s'assurer que le diplôme est émis par l'université. La clé privée, pour chiffrer le message, est gardé secret par l'université._
+Pour générer une paire clé publique / clé privée, on utilise la commande :
+```sh
+python3 main.py keygen 2048 "passphrase"
+```
+
+Pour signer et vérifier des données avec cette clé, cf. [Question 4](#question-4) et [Question 5](#question-5)
 
 ### Question 3
 Utilisation :
@@ -44,13 +49,13 @@ Utilisation :
 python3 main.py verify "Truc BIDULE"
 ```
 
-### Génération d'un diplôme
+#### Génération d'un diplôme
 1. On écrit les infos en clair sur le diplôme (nom, moyenne, date de naissance, année...).
 2. Les bits de poids faibles de l'image sont mis à zéro.
 3. L'image est ensuite hachée puis une signature est générée avec la clé privée et l'empreinte.
 4. La signature est cachée dans le diplôme sur le dernier bit de poids faible de canal de chaque pixel.
 
-### Vérification d'un diplôme
+#### Vérification d'un diplôme
 1. On récupère la signature cachée dans le diplôme.
 2. On nettoie les bits de poids faible du diplôme pour revenir à la même image qu'au point 2. de la génération du diplôme.
 3. On hache à nouveau l'image de la même manière qu'au point 3. de la génération du diplôme mais sans la signée.
