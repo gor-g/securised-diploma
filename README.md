@@ -8,12 +8,13 @@
 - numpy
 - pycryptodome
 - argparse
-- hashlib
 - PIL
+
+Un fichier `requirements.txt` contient les bibiliothèques qui ne sont pas installées par défaut.
 
 ### Question 1
 
-Usage : vous devez avoir sur votre PC une image à modifier, et un fichier .txt contenant le message
+Usage : Vous devez avoir sur votre PC une image à modifier.
 
 ```sh
 python3 main.py insert data/diplome-BG.png "Le mystère des Pyramides, c’est le mystère de la conscience dans laquelle on n’entre pas." data/tmp/diplome-BG_msg.png
@@ -46,8 +47,8 @@ python3 main.py verify "Truc BIDULE"
 ### Génération d'un diplôme
 1. On écrit les infos en clair sur le diplôme (nom, moyenne, date de naissance, année...).
 2. Les bits de poids faibles de l'image sont mis à zéro.
-3. L'image est ensuite hachée puis une signatur est générée avec la clé privée et l'empreinte.
-4. La signature est cachée dans le diplôme sur le dernir bit de poids faible de canal de chaque pixel.
+3. L'image est ensuite hachée puis une signature est générée avec la clé privée et l'empreinte.
+4. La signature est cachée dans le diplôme sur le dernier bit de poids faible de canal de chaque pixel.
 
 ### Vérification d'un diplôme
 1. On récupère la signature cachée dans le diplôme.
