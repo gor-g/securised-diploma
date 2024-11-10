@@ -9,6 +9,9 @@ from PIL import Image
 from Crypto.PublicKey import RSA
 
 class Runner:
+    def __init__(self) -> None:
+        EnvService()
+
     def run(self, args: dict[str, Any]) -> Any:
         command = args.pop("command")
         print(f"running : {command}\nwith arguments : {args}")
