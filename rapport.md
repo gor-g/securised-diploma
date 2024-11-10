@@ -63,7 +63,7 @@ Les deux points les plus importants du prototype sont la création du diplôme e
 ### Création du diplôme
 Tout d'abord, nous avons la fonction de création d'un diplôme
 ```py
-def create_diploma(template_path: str, student: str, date_birth: str, year: str, average: str, merit: str):
+def create_diploma(self, template_path: str, student: str, date_birth: str, year: str, average: str, merit: str):
     """Create a diploma with visible and hidden informations"""
 ```
 Cette fonction prend en paramètre le chemin de l'image de fond du diplôme, le prénom et le nom de l'étudiant, sa date de naissance, l'année d'obtention du diplôme, sa moyenne ainsi que sa mention.
@@ -71,87 +71,93 @@ Cette fonction prend en paramètre le chemin de l'image de fond du diplôme, le 
 Ensuite, l'image de fond du diplôme est ouverte et les informations sont inscrites dessus en clair.
 ```py  
 img = Image.open(template_path)
-
+        
 # VISIBLE
-img = write_text(img, f"Université {'TRUCMACHIN'[::-1]}", (345, 150))
-img = write_text(img, "Diplôme national de master en informatique".upper(), (210, 200))
-img = write_text(img, f"Session : {year}", (400, 235))
-img = write_text(img, f"Obtenu par : {student}", (345, 300))
-img = write_text(img, f"Né(e) le {date_birth}", (390, 350))
-img = write_text(img, f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}", (160, 420))
-
+text = [
+    f" Université {'TRUCMACHIN'[::-1]}",
+    f"Diplôme : Diplôme national de master en informatique",
+    "",
+    f"Session : {year}",
+    f"Obtenu par : {student}",
+    f"Né(e) le {date_birth}",
+    "",
+    f"Avec la moyenne de {average} / 20 et obtient donc la mention {merit.upper()}",
+]
+img = self.write_text(img, text)
 student_name = student.replace(" ", "_")
-new_path = f"./data/diplome-{student_name}.png"
-img.save(new_path)
+filled_diploma_im_path = self.env_service.get_diploma_output_path(student_name)
+img.save(filled_diploma_im_path)
 ```
 L'image du diplôme est ensuite sauvegardée dans un nouveau fichier png.
 
 L'étape suivante consiste en mettre à zéro les bits de poids faible de l'image pour pouvoir la signer puis y cacher cette signature.
 ```py 
-# clean lsb (useful for the verify_diploma function)
-steganograph = Steganograph()
-steganograph.set_im(imread(new_path))
-steganograph.clean_lsb()
-steganograph.export(new_path)
+# we clean the LSBs before we generate the signature, so that when calling verify_signature
+# we know that we must call it on the image with a clean LSBs
+steganographer = Steganographer()
+steganographer.set_im(imread(filled_diploma_im_path))
+steganographer.clean_lsb()
+steganographer.export(filled_diploma_im_path)
 ```
 
 Puis, le diplôme est signé.
 ```py 
 # sign file
-generate_keys(passphrase=student_name)
-signature, key = sign_file(new_path, passphrase=student_name)
+signature= self.generate_signature(filled_diploma_im_path)
 ```
 
 Enfin, on cache la signature du diplôme dans l'image.
 ```py 
 # HIDDEN
-steganograph = Steganograph()
-steganograph.set_im(imread(new_path))
-steganograph.set_msg(signature)
-steganograph.write_msg()
-steganograph.export(new_path)
+steganographer = Steganographer()
+steganographer.set_im(imread(filled_diploma_im_path))
+steganographer.set_msg(signature)
+steganographer.write_msg()
+steganographer.export(filled_diploma_im_path)
 
-return img, key.public_key()
+return img
 ```
 
 ### Vérification du diplôme
 Ensuite, nous avons une fonction pour vérifier l'authenticité d'un diplôme.
 ```py
-def verify_diploma(student: str, public_key):
-    """Verify if the diploma is authentic. Get the hidden signature, remove it, and resign diploma to check if it's the same signature."""
+def verify_diploma(self, student: str, public_key:RsaKey):
+    """Verify if the diploma is authentic. Get the hidden signature, remove it, and re-sign diploma to check if it's the same signature."""
 ```
 La fonction prend en paramètre le nom de l'étudiant (sous la forme Prénom NOM) ainsi que la clé publique pour vérifier la signature.
 
 La fonction récupère ensuite la signature dans le diplôme et crée une copie du diplôme, avec les bits de poids faible remis à zéro.
 ```py
 student_name = student.replace(" ", "_")
-path = f"./data/diplome-{student_name}.png"
-check_path = f"./data/diplome-{student_name}-check.png"
+im_path = self.env_service.get_diploma_output_path(student_name)
+nolsb_im_path = self.env_service.get_nolsb_diploma_tmp_path(student_name)
 
-# get and remove hidden signature
-steganograph = Steganograph()
-steganograph.set_im(imread(path))
-signature = steganograph.read_msg()
-steganograph.clean_lsb()
-steganograph.export(check_path)
+# get the hidden signature
+steganographer = Steganographer()
+steganographer.set_im(imread(im_path))
+signature = steganographer.read_msg()
+
+# clean the LSBs to get the version of the image used to generate the signature
+steganographer.clean_lsb()
+steganographer.export(nolsb_im_path)
 ```
 
 La copie du diplôme est ensuite hachée puis la signature extraite est comparée avec cette empreinte à l'aide de la clé publique afin de vérifier l'authenticité du diplôme.
 ```py
-# hash diploma to check if it's the same as his signature
-return check_signature(public_key, hash_image(check_path), signature)
+# hash diploma to check if it's the same as the one used to generate the signature
+return self.check_signature(public_key, self.hash_image(nolsb_im_path), signature)
 ```
 
 ### Signature d'un fichier
 Afin de signer notre diplôme, on utilise la fonction suivante :
 ```py
-def sign_file(path_img: str, path_key: str = "./data/private.pem", passphrase="Clé sécurisée"):
-    """Generate a signature for a given file and a given key"""
+def generate_signature(self, path_img: str):
+    """Generate a signature for a given file"""
 ```
 
 L'image est d'abord hachée :
 ```py
-h = hash_image(path_img)
+h = self.hash_image(path_img)
 ```
 On obtient alors une empreinte qui ressemble à cela :
 ```sh
@@ -160,8 +166,14 @@ Empreinte de "./data/diplome-Truc_BIDULE.png" = f92c8515656b7bcb8687e2c8a1d1c7de
 
 Puis, on récupère la clé privée de l'université.
 ```py
-with open(path_key, "rb") as f:
-    key = RSA.import_key(f.read(), passphrase=passphrase)
+key = None
+while key is None:
+    try:
+        with open(self.env_service.PRIVATE_KEY_PATH, "rb") as f:
+            key = RSA.import_key(f.read(), passphrase=self.env_service.get_passphrase())
+    except ValueError:
+        print("Mot de passe incorrect")
+        key = None
 ```
 
 Enfin, l'empreinte du diplôme est signée avec la clé privée de l'université, selon les standards de cryptographie à clé publique RSA.
@@ -171,7 +183,7 @@ signature = pkcs1_15.new(key).sign(h)
 
 On retourne ensuite la signature encodée en base 64 et prête à être cachée dans notre diplôme.
 ```py
-return base64.b64encode(signature).decode(), key
+return base64.b64encode(signature).decode()
 ```
 ```sh
 Signature de "./data/diplome-Truc_BIDULE.png" = EqdTTkdPsbNGi8mTBw04S8TiJsRHgaHWDJof9JT3WIpfCyyaInQh/vrGOLFm1qb0w4iRL+B+pz4UubP1mE+FVn+WmTVsyllIjD+Q/QqtmzDvfUtt/htZRh/k8gK/yAdHQW1ORnMoDIaz99Rldr5rZulqiEM7r9Y5nmFLJly9D6mLV11jAK9qzmli1eXkqUZjN2CoL/xX+rbiIU95RDNRUa3uW88uR/MONOTV4EsDnMboFXadMlxh30Ze0DrwqynzYs/E6304kKlPBYOKx8LnZmWUtXt3LtEU+E1zifetfNUhIzvrQS7dQ5o04qQsnmFJOm0bpsIj/82p9X/slKVd1g==

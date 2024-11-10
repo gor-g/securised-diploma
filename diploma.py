@@ -38,7 +38,7 @@ class Diploma:
         return img
 
     def generate_signature(self, path_img: str):
-        """Generate a signature for a given file and a given key"""
+        """Generate a signature for a given file"""
 
         h = self.hash_image(path_img)
 
